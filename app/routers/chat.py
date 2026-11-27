@@ -7,4 +7,8 @@ from app.services.orquestador import responder
 router = APIRouter()
 
 
-# TODO: POST /chat (entrada ChatEntrada, salida ChatSalida). Recibe el LLM con Depends(get_llm)
+@router.post("/chat", response_model=ChatSalida)
+def chat(entrada: ChatEntrada, llm=Depends(get_llm)) -> ChatSalida:
+    """Pasa la conversación al orquestador. El LLM llega por Depends para poder
+    sustituirlo en los tests (app.dependency_overrides)."""
+    return responder(entrada.mensajes, llm)
