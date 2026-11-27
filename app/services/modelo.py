@@ -1,7 +1,7 @@
 import joblib
 
 from app.config import MODEL_PATH
-from app.schemas.prestamo import PrediccionSalida
+from app.schemas.prestamo import PrediccionSalida, PrestamoEntrada
 
 # Orden en el que el modelo espera las variables
 VARIABLES = [
@@ -13,6 +13,26 @@ VARIABLES = [
     "impagos_previos",
 ]
 
-# TODO: cargar el modelo joblib una sola vez, al importar el modulo
-# TODO: funcion decidir(probabilidad) -> "aprobar", "revisar" o "rechazar" (umbrales en el enunciado)
-# TODO: funcion predecir(entrada) -> PrediccionSalida, usando VARIABLES para ordenar los valores
+# Umbrales de decisión sobre la probabilidad de impago
+UMBRAL_APROBAR = 0.2
+UMBRAL_REVISAR = 0.5
+
+# Se carga una sola vez, al importar el módulo (no en cada petición)
+modelo = joblib.load(MODEL_PATH)
+
+
+def decidir(probabilidad: float) -> str:
+    """Traduce la probabilidad de impago en una decisión."""
+    if probabilidad < UMBRAL_APROBAR:
+        return "aprobar"
+    if probabilidad < UMBRAL_REVISAR:
+        return "revisar"
+    return "rechazar"
+
+
+def predecir(entrada: PrestamoEntrada) -> PrediccionSalida:
+    """Calcula la probabilidad de impago y la decisión para una solicitud ya validada."""
+    datos = entrada.model_dump()
+    fila = [[datos[variable] for variable in VARIABLES]]
+    probabilidad = float(modelo.predict_proba(fila)[0][1])
+    return PrediccionSalida(probabilidad_impago=probabilidad, decision=decidir(probabilidad))
