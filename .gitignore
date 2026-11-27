@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Entorno virtual (uv)
+.venv/
+
+# Variables de entorno / claves del LLM
+.env
+
+# Editores y sistema
+.vscode/
+.idea/
+.DS_Store
